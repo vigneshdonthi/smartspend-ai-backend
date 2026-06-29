@@ -24,3 +24,40 @@ class ExpenseModel(models.Model):
 
     def __str__(self):
         return f"{self.item} - ₹{self.amount} - {self.category}"
+
+
+class BudgetModel(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="budgets"
+    )
+
+    month = models.PositiveSmallIntegerField()
+
+    year = models.PositiveSmallIntegerField()
+
+    budget = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Budget (₹)"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "month", "year"],
+                name="unique_budget_per_month"
+            )
+        ]
+
+        ordering = ["-year", "-month"]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.month}/{self.year} - ₹{self.budget}"
