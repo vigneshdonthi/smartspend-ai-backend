@@ -2,7 +2,7 @@ from urllib import request
 from httpcore import request
 
 from django.shortcuts import render
-from .serializers import RegisterSerializer,LoginSerializer
+from .serializers import RegisterSerializer,LoginSerializer,ProfileSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -43,6 +43,12 @@ class LoginAPIView(APIView):
                     "message": "Login successful.",
                     "access": str(refresh.access_token),
                     "refresh": str(refresh),
+                    "user": {
+                        "id": user.id,
+                        "username": user.username,
+                        "email": user.email,
+                    },
+
                 },
                 status=status.HTTP_200_OK
             )
@@ -68,13 +74,36 @@ class LogoutAPIView(APIView):
             return Response({"error":"Invalid refresh token."},status=status.HTTP_400_BAD_REQUEST)
 
 class ProfileAPIView(APIView):
+
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]
-    def get(self,request):
+
+    def get(self, request):
+
+        serializer = ProfileSerializer(
+            request.user
+        )
+
         return Response(
-            {
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email,
-            }
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
+    def patch(self, request):
+
+        serializer = ProfileSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+        )
+
+        serializer.is_valid(
+            raise_exception=True
+        )
+
+        serializer.save()
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
         )

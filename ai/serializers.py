@@ -10,16 +10,22 @@ class AnalyzeSerializer(serializers.Serializer):
 
     year = serializers.IntegerField(
         min_value=2000,
+        max_value=2100,
     )
 
-    def validate(self, data):
 
-        month = data["month"]
-        year = data["year"]
+class ChatSerializer(serializers.Serializer):
 
-        if year > 2100:
-            raise serializers.ValidationError(
-                "Enter a valid year."
-            )
+    month = serializers.IntegerField(
+        min_value=1,
+        max_value=12,
+    )
 
-        return data
+    year = serializers.IntegerField(
+        min_value=2000,
+        max_value=2100,
+    )
+
+    question = serializers.CharField(
+        max_length=500,
+    )

@@ -1,6 +1,12 @@
 from calendar import month_name
 
-from django.db.models import Sum, Avg, Max, Min, Count
+from django.db.models import (
+    Sum,
+    Avg,
+    Max,
+    Min,
+    Count,
+)
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -22,12 +28,7 @@ class AnalyzeAPIView(APIView):
     def post(self, request):
 
         serializer = AnalyzeSerializer(data=request.data)
-
-        if not serializer.is_valid():
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer.is_valid(raise_exception=True)
 
         month = serializer.validated_data["month"]
         year = serializer.validated_data["year"]
@@ -37,6 +38,14 @@ class AnalyzeAPIView(APIView):
             date__month=month,
             date__year=year,
         )
+
+        if not expenses.exists():
+            return Response(
+                {
+                    "message": "No expenses found for the selected month."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         summary = expenses.aggregate(
             spent=Sum("amount"),
@@ -67,9 +76,10 @@ class AnalyzeAPIView(APIView):
             )
 
         category_summary = (
-            expenses.values("category")
+            expenses
+            .values("category")
             .annotate(total=Sum("amount"))
-            .order_by("category")
+            .order_by("-total")
         )
 
         recurring_expenses = expenses.filter(
@@ -118,9 +128,24 @@ Category Breakdown:
 
             expense_data += "\nNone"
 
+        expense_data += "\n\nRecent Expenses:\n"
+
+        recent_expenses = expenses.order_by("-date", "-id")[:10]
+
+        for expense in recent_expenses:
+
+            expense_data += (
+                f"\n- {expense.date} | "
+                f"{expense.item} | "
+                f"{expense.category} | "
+                f"₹{expense.amount}"
+            )
+
         try:
 
-            analysis = analyze_expenses(expense_data)
+            analysis = analyze_expenses(
+                expense_data
+            )
 
             return Response(
                 {
