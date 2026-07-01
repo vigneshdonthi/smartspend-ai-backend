@@ -1,0 +1,1 @@
+web: gunicorn smartspend_ai.wsgi:application
