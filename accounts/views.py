@@ -1,5 +1,4 @@
-from urllib import request
-from httpcore import request
+
 
 from django.shortcuts import render
 from .serializers import RegisterSerializer,LoginSerializer,ProfileSerializer
