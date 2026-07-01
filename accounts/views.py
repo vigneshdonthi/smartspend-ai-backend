@@ -9,9 +9,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from rest_framework import status
-
+from rest_framework.permissions import IsAuthenticated, AllowAny
 # Create your views here.
 class RegisterAPIView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
     def post(self,request):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -28,6 +30,8 @@ class RegisterAPIView(APIView):
 
 
 class LoginAPIView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
     def post(self,request):
         username = request.data.get('username')
         password = request.data.get('password')
